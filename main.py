@@ -76,7 +76,11 @@ def main():
                     imgui.set_next_item_width(-1)
                     _, out = imgui.input_text(
                         f"##{i},{j}", str(app_state.myNvgDemo.matrix[i][j]), imgui.InputTextFlags_.auto_select_all)
-                    app_state.myNvgDemo.matrix[i][j] = float(out)
+                    try:
+                        app_state.myNvgDemo.matrix[i][j] = float(out)
+                    except ValueError:
+                        # If there's a float conversion error just ignore it.
+                        pass
 
             imgui.end_table()
 

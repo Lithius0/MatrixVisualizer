@@ -68,9 +68,8 @@ class NvgTest:
         This method tries to keep the stroke width consistent.
         Messing with the transforms skews the width of the stroke.
         """
-        # x_length = max(self.matrix[0].x, self.matrix[1].y)
-        y_length = glm.length(self.matrix[1])
-        return 0.1 / y_length
+        # 1.414 is an approximation of sqrt 2. Don't ask.
+        return 0.1 / max(glm.length(self.matrix[0] + self.matrix[1]), 1.414)
 
     def point_within_circle(self, point: vec2, circle_center: vec2, radius: float) -> bool:
         difference = point - circle_center
@@ -121,7 +120,7 @@ class NvgTest:
 
         for dot_position in self.dots:
             nvg.fill_color(self.context, nvg.rgb(255, 255, 255))
-            self.draw_rect_centered(dot_position, vec2(0.05, 0.05))
+            self.draw_rect_centered(dot_position, vec2(0.02, 0.02))
 
     def generate_dots(self, amount: int):
         for _ in range(amount):

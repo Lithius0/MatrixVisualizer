@@ -42,10 +42,6 @@ def main():
     runner_params.callbacks.enqueue_before_exit(before_exit)
 
     def nvg_drawing_function(_: nvg.Context, width: float, height: float):
-        now = imgui.get_time()
-        mouse_pos = ImVec2(
-            imgui.get_mouse_pos().x - imgui.get_main_viewport().pos.x,
-            imgui.get_mouse_pos().y - imgui.get_main_viewport().pos.y)
         app_state.myNvgDemo.render(width, height)
 
     def custom_background():

@@ -10,23 +10,16 @@ from typing import Literal
 
 
 class NvgTest:
-    context: nvg.Context
-    matrix: mat3x3
-    scale: float
-    dots: list[vec2]
-    held: Literal["x", "y"] | None
-    x_unit: vec2
-    y_unit: vec2
-
     def __init__(self, context: nvg.Context) -> None:
-        self.context = context
-        self.matrix = mat3x3()  # Identity matrix
-        self.scale = 100
-        self.dots = []
-        self.mouse = vec2()
-        self.held = None
-        self.x_unit = vec2(1, 0)
-        self.y_unit = vec2(0, 1)
+        self.context: nvg.Context = context
+        self.matrix: mat3x3 = mat3x3()  # Identity matrix
+        self.scale: float = 100
+        self.dots: list[vec2] = []
+        self.mouse: vec2 = vec2()
+        self.held: Literal["x", "y", "m"] | None = None
+        self.x_unit: vec2 = vec2(1, 0)
+        self.y_unit: vec2 = vec2(0, 1)
+        self.misc_vector: vec2 = vec2(1, 1)
 
     def draw_line(self, from_point: vec2, to_point: vec2):
         nvg.begin_path(self.context)
@@ -40,8 +33,9 @@ class NvgTest:
         nvg.fill(self.context)
 
     def draw_rect_centered(self, center: vec2, size: vec2):
+        corner = center - size / 2
         nvg.begin_path(self.context)
-        nvg.rect(self.context, center.x, center.y, size.x, size.y)
+        nvg.rect(self.context, corner.x, corner.y, size.x, size.y)
         nvg.fill(self.context)
 
     def draw_grid(self, spacing: float, lines: int):
@@ -99,11 +93,15 @@ class NvgTest:
             self.matrix[0] = vec3(mouse_normalized.x, mouse_normalized.y, 0)
         elif self.held == "y":
             self.matrix[1] = vec3(mouse_normalized.x, mouse_normalized.y, 0)
+        elif self.held == "m":
+            self.misc_vector = vec2(mouse_local.x, mouse_local.y)
         elif imgui.is_mouse_clicked(imgui.MouseButton_.left):
             if self.point_within_circle(mouse_local, self.x_unit, 0.1):
                 self.held = "x"
             elif self.point_within_circle(mouse_local, self.y_unit, 0.1):
                 self.held = "y"
+            elif self.point_within_circle(mouse_local, self.misc_vector, 0.1):
+                self.held = "m"
 
         # Unit Vectors
         nvg.save(self.context)
@@ -111,12 +109,15 @@ class NvgTest:
         nvg.stroke_color(self.context, nvg.rgb(255, 0, 0))
         nvg.fill_color(self.context, nvg.rgb(255, 0, 0))
         self.draw_line(vec2(0, 0), self.x_unit)
-        self.draw_rect_centered(vec2(0, 0), self.x_unit)
         nvg.stroke_color(self.context, nvg.rgb(0, 255, 0))
         nvg.fill_color(self.context, nvg.rgb(0, 255, 0))
         self.draw_line(vec2(0, 0), self.y_unit)
-        self.draw_rect_centered(vec2(0, 0), self.y_unit)
         nvg.restore(self.context)
+
+        # Misc vector to show transformation detail.
+        nvg.stroke_color(self.context, nvg.rgb(255, 255, 0))
+        nvg.fill_color(self.context, nvg.rgb(0, 255, 0))
+        self.draw_line(vec2(0, 0), self.misc_vector)
 
         for dot_position in self.dots:
             nvg.fill_color(self.context, nvg.rgb(255, 255, 255))

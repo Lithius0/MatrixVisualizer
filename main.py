@@ -62,10 +62,17 @@ def main():
                 app_state.vg, app_state.myFrameBuffer, nvg_drawing_function, clear_color_vec4)
             imgui.image(app_state.myFrameBuffer.texture_id, ImVec2(1000, 600))
 
-        if imgui.begin_table("MatrixEdit", 2, imgui.TableFlags_.no_pad_inner_x | imgui.TableFlags_.borders_inner):
-            for i in range(2):
-                imgui.table_setup_column(
-                    f"Col{i}", imgui.TableColumnFlags_.width_fixed, 200)
+        if imgui.begin_table("MatrixEdit", 4, imgui.TableFlags_.no_pad_inner_x | imgui.TableFlags_.borders_inner):
+            imgui.table_setup_column(
+                f"Transform X", imgui.TableColumnFlags_.width_fixed, 200)
+            imgui.table_setup_column(
+                f"Transform Y", imgui.TableColumnFlags_.width_fixed, 200)
+            imgui.table_setup_column(
+                f"Input Vector", imgui.TableColumnFlags_.width_fixed, 200)
+            imgui.table_setup_column(
+                f"Output Vector", imgui.TableColumnFlags_.width_fixed, 200)
+            imgui.table_headers_row()
+
             for i in range(2):
                 for j in range(2):
                     imgui.table_next_column()
@@ -77,6 +84,19 @@ def main():
                     except ValueError:
                         # If there's a float conversion error just ignore it.
                         pass
+                imgui.table_next_column()
+                imgui.set_next_item_width(-1)
+                _, input = imgui.input_text(
+                    f"##inputv{i}", str(app_state.myNvgDemo.misc_vector[i]), imgui.InputTextFlags_.auto_select_all)
+                try:
+                    app_state.myNvgDemo.misc_vector[i] = float(input)
+                except ValueError:
+                    # If there's a float conversion error just ignore it.
+                    pass
+                imgui.table_next_column()
+                imgui.set_next_item_width(-1)
+                imgui.input_text(f"##ouputv{i}", str(
+                    (app_state.myNvgDemo.matrix * app_state.myNvgDemo.misc_vector)[i]), imgui.InputTextFlags_.read_only)
 
             imgui.end_table()
 
@@ -90,7 +110,7 @@ def main():
 
         imgui.set_next_item_width(hello_imgui.em_size(15))
         _, app_state.clear_color = imgui.color_edit4(
-            "Clear Color", app_state.clear_color)
+            "Background Color", app_state.clear_color)
         if imgui.is_item_hovered():
             imgui.set_tooltip("Background color of the drawing")
 

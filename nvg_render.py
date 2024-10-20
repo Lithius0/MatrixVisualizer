@@ -9,7 +9,7 @@ import random
 from typing import Literal
 
 
-class NvgTest:
+class NvgData:
     def __init__(self, context: nvg.Context) -> None:
         self.context: nvg.Context = context
         self.matrix: mat3x3 = mat3x3()  # Identity matrix
@@ -101,11 +101,11 @@ class NvgTest:
         elif self.held == "m":
             self.misc_vector = vec2(mouse_normalized.x, mouse_normalized.y)
         elif imgui.is_mouse_clicked(imgui.MouseButton_.left):
-            if self.point_within_circle(mouse_local, self.x_unit, 0.1):
+            if self.point_within_circle(mouse_local, self.x_unit, 0.2):
                 self.held = "x"
-            elif self.point_within_circle(mouse_local, self.y_unit, 0.1):
+            elif self.point_within_circle(mouse_local, self.y_unit, 0.2):
                 self.held = "y"
-            elif self.point_within_circle(mouse_local, self.misc_vector, 0.1):
+            elif self.point_within_circle(mouse_local, glm.inverse(self.matrix) * self.misc_vector, 0.2):
                 self.held = "m"
 
         # Unit Vectors

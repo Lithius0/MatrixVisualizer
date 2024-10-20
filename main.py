@@ -1,6 +1,6 @@
 # port of bindings/imgui_bundle/demos_cpp/demos_nanovg/demo_nanovg_full.cpp
 from imgui_bundle import imgui, nanovg as nvg, hello_imgui, ImVec2, ImVec4
-from nvg_render import NvgTest
+from nvg_render import NvgData
 import glm
 
 
@@ -8,9 +8,9 @@ nvg_imgui = nvg.nvg_imgui
 
 
 class AppState:
-    myNvgDemo: NvgTest
+    nvg_data: NvgData
     vg: nvg.Context
-    myFrameBuffer: nvg_imgui.NvgFramebuffer
+    frame_buffer: nvg_imgui.NvgFramebuffer
     clear_color: list[float]
     display_in_frame_buffer: bool = False
 
@@ -28,21 +28,21 @@ def main():
     def post_init():
         app_state.vg = nvg_imgui.create_nvg_context_hello_imgui(
             nvg_imgui.NvgCreateFlags.antialias.value | nvg_imgui.NvgCreateFlags.stencil_strokes.value)
-        app_state.myNvgDemo = NvgTest(app_state.vg)
+        app_state.nvg_data = NvgData(app_state.vg)
         nvg_image_flags = 0
-        app_state.myFrameBuffer = nvg_imgui.NvgFramebuffer(
+        app_state.frame_buffer = nvg_imgui.NvgFramebuffer(
             app_state.vg, 1000, 600, nvg_image_flags)
 
     def before_exit():
-        app_state.myNvgDemo.reset()
-        app_state.myFrameBuffer = None
+        app_state.nvg_data.reset()
+        app_state.frame_buffer = None
         nvg_imgui.delete_nvg_context_hello_imgui(app_state.vg)
 
     runner_params.callbacks.enqueue_post_init(post_init)
     runner_params.callbacks.enqueue_before_exit(before_exit)
 
     def nvg_drawing_function(_: nvg.Context, width: float, height: float):
-        app_state.myNvgDemo.render(width, height)
+        app_state.nvg_data.render(width, height)
 
     def custom_background():
         clear_color_vec4 = ImVec4(*app_state.clear_color)
@@ -59,8 +59,8 @@ def main():
         if app_state.display_in_frame_buffer:
             clear_color_vec4 = ImVec4(*app_state.clear_color)
             nvg_imgui.render_nvg_to_frame_buffer(
-                app_state.vg, app_state.myFrameBuffer, nvg_drawing_function, clear_color_vec4)
-            imgui.image(app_state.myFrameBuffer.texture_id, ImVec2(1000, 600))
+                app_state.vg, app_state.frame_buffer, nvg_drawing_function, clear_color_vec4)
+            imgui.image(app_state.frame_buffer.texture_id, ImVec2(1000, 600))
 
         if imgui.begin_table("MatrixEdit", 4, imgui.TableFlags_.no_pad_inner_x | imgui.TableFlags_.borders_inner):
             imgui.table_setup_column(
@@ -78,25 +78,25 @@ def main():
                     imgui.table_next_column()
                     imgui.set_next_item_width(-1)
                     _, out = imgui.input_text(
-                        f"##{i},{j}", str(app_state.myNvgDemo.matrix[i][j]), imgui.InputTextFlags_.auto_select_all)
+                        f"##{i},{j}", str(app_state.nvg_data.matrix[i][j]), imgui.InputTextFlags_.auto_select_all)
                     try:
-                        app_state.myNvgDemo.matrix[i][j] = float(out)
+                        app_state.nvg_data.matrix[i][j] = float(out)
                     except ValueError:
                         # If there's a float conversion error just ignore it.
                         pass
                 imgui.table_next_column()
                 imgui.set_next_item_width(-1)
                 _, input = imgui.input_text(
-                    f"##inputv{i}", str(app_state.myNvgDemo.misc_vector[i]), imgui.InputTextFlags_.auto_select_all)
+                    f"##inputv{i}", str(app_state.nvg_data.misc_vector[i]), imgui.InputTextFlags_.auto_select_all)
                 try:
-                    app_state.myNvgDemo.misc_vector[i] = float(input)
+                    app_state.nvg_data.misc_vector[i] = float(input)
                 except ValueError:
                     # If there's a float conversion error just ignore it.
                     pass
                 imgui.table_next_column()
                 imgui.set_next_item_width(-1)
                 imgui.input_text(f"##ouputv{i}", str(
-                    (app_state.myNvgDemo.matrix * app_state.myNvgDemo.misc_vector)[i]), imgui.InputTextFlags_.read_only)
+                    (app_state.nvg_data.matrix * app_state.nvg_data.misc_vector)[i]), imgui.InputTextFlags_.read_only)
 
             imgui.end_table()
 
@@ -104,37 +104,37 @@ def main():
             "Drag to rotate!", 0, 0.01, -1, 1, "", imgui.SliderFlags_.no_input)
         if drag_changed:
             rotation = glm.rotate(-drag)
-            app_state.myNvgDemo.matrix = rotation * app_state.myNvgDemo.matrix
+            app_state.nvg_data.matrix = rotation * app_state.nvg_data.matrix
 
         scale_changed, scale = imgui.drag_float(
             "Drag to scale!", 1, 0.01, 0, 2, "", imgui.SliderFlags_.no_input)
         if scale_changed:
-            app_state.myNvgDemo.matrix = glm.scale(
-                glm.vec2(scale)) * app_state.myNvgDemo.matrix
+            app_state.nvg_data.matrix = glm.scale(
+                glm.vec2(scale)) * app_state.nvg_data.matrix
 
         imgui.separator_text("Properties")
 
         imgui.text(f"Determinant: {glm.determinant(
-            app_state.myNvgDemo.matrix)}")
+            app_state.nvg_data.matrix)}")
 
         imgui.separator_text("Commands")
 
         if imgui.button("Invert"):
-            inverted = glm.inverse(app_state.myNvgDemo.matrix)
-            app_state.myNvgDemo.matrix = inverted
+            inverted = glm.inverse(app_state.nvg_data.matrix)
+            app_state.nvg_data.matrix = inverted
 
         if imgui.button("Generate Dots"):
-            app_state.myNvgDemo.clear_dots()
-            app_state.myNvgDemo.generate_dots(20)
+            app_state.nvg_data.clear_dots()
+            app_state.nvg_data.generate_dots(20)
 
         if imgui.button("Clear Dots"):
-            app_state.myNvgDemo.clear_dots()
+            app_state.nvg_data.clear_dots()
 
         imgui.spacing()
         imgui.spacing()
 
         if imgui.button("Reset"):
-            app_state.myNvgDemo.matrix = glm.mat3x3()
+            app_state.nvg_data.matrix = glm.mat3x3()
 
         imgui.separator_text("Background")
 

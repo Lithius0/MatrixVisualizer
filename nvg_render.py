@@ -19,7 +19,7 @@ class NvgTest:
         self.held: Literal["x", "y", "m"] | None = None
         self.x_unit: vec2 = vec2(1, 0)
         self.y_unit: vec2 = vec2(0, 1)
-        self.misc_vector: vec2 = vec2(1, 1)
+        self.misc_vector: vec2 = vec2(1, 1)  # Vector in world space
 
     def draw_line(self, from_point: vec2, to_point: vec2):
         nvg.begin_path(self.context)
@@ -70,12 +70,17 @@ class NvgTest:
         return glm.length(difference) <= radius
 
     def render(self, width: float, height: float) -> None:
+        nvg.stroke_width(self.context, self.get_stroke_width())
+
+        # Misc vector to show transformation detail.
+
+        # Normal screen positions can be a bit counterintuitive (e.g. +y is down) and hard to look at.
+        # Performing a quick transformation to make it more palatable.
         normalizer = mat3x3(self.scale, 0, 0, 0, -self.scale,
                             0, width / 2, height / 2, 1)
+        # Performing the visible transformation
         world_transform = normalizer * self.matrix
         self.transform(world_transform)
-
-        nvg.stroke_width(self.context, self.get_stroke_width())
 
         self.draw_grid(1, 64)
 
@@ -94,7 +99,7 @@ class NvgTest:
         elif self.held == "y":
             self.matrix[1] = vec3(mouse_normalized.x, mouse_normalized.y, 0)
         elif self.held == "m":
-            self.misc_vector = vec2(mouse_local.x, mouse_local.y)
+            self.misc_vector = vec2(mouse_normalized.x, mouse_normalized.y)
         elif imgui.is_mouse_clicked(imgui.MouseButton_.left):
             if self.point_within_circle(mouse_local, self.x_unit, 0.1):
                 self.held = "x"
@@ -114,14 +119,24 @@ class NvgTest:
         self.draw_line(vec2(0, 0), self.y_unit)
         nvg.restore(self.context)
 
-        # Misc vector to show transformation detail.
-        nvg.stroke_color(self.context, nvg.rgb(255, 255, 0))
+        # Post misc vector
+        nvg.stroke_color(self.context, nvg.rgba(255, 255, 0, 100))
         nvg.fill_color(self.context, nvg.rgb(0, 255, 0))
         self.draw_line(vec2(0, 0), self.misc_vector)
 
         for dot_position in self.dots:
             nvg.fill_color(self.context, nvg.rgb(255, 255, 255))
             self.draw_rect_centered(dot_position, vec2(0.02, 0.02))
+
+        # Resetting the transform for the pre misc vector
+        # Seems more stable than transforming by the inverse self matrix.
+        nvg.reset_transform(self.context)
+        self.transform(normalizer)
+
+        # Showing this vector pre self matrix transform as its the input vector.
+        nvg.stroke_color(self.context, nvg.rgb(255, 255, 0))
+        nvg.fill_color(self.context, nvg.rgb(0, 255, 0))
+        self.draw_line(vec2(0, 0), self.misc_vector)
 
     def generate_dots(self, amount: int):
         for _ in range(amount):

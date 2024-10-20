@@ -1,7 +1,7 @@
 # port of bindings/imgui_bundle/demos_cpp/demos_nanovg/demo_nanovg_full.cpp
 from imgui_bundle import imgui, nanovg as nvg, hello_imgui, ImVec2, ImVec4
 from nvg_render import NvgTest
-from glm import mat2x2
+import glm
 
 
 nvg_imgui = nvg.nvg_imgui
@@ -53,7 +53,7 @@ def main():
 
     def gui():
         imgui.set_next_window_pos(ImVec2(0, 0), imgui.Cond_.appearing.value)
-        imgui.begin("My Window!", None,
+        imgui.begin("Linear Algebra", None,
                     imgui.WindowFlags_.always_auto_resize.value)
 
         if app_state.display_in_frame_buffer:
@@ -64,13 +64,13 @@ def main():
 
         if imgui.begin_table("MatrixEdit", 4, imgui.TableFlags_.no_pad_inner_x | imgui.TableFlags_.borders_inner):
             imgui.table_setup_column(
-                f"Transform X", imgui.TableColumnFlags_.width_fixed, 200)
+                f"Transform X", imgui.TableColumnFlags_.width_fixed, 100)
             imgui.table_setup_column(
-                f"Transform Y", imgui.TableColumnFlags_.width_fixed, 200)
+                f"Transform Y", imgui.TableColumnFlags_.width_fixed, 100)
             imgui.table_setup_column(
-                f"Input Vector", imgui.TableColumnFlags_.width_fixed, 200)
+                f"Input Vector", imgui.TableColumnFlags_.width_fixed, 100)
             imgui.table_setup_column(
-                f"Output Vector", imgui.TableColumnFlags_.width_fixed, 200)
+                f"Output Vector", imgui.TableColumnFlags_.width_fixed, 100)
             imgui.table_headers_row()
 
             for i in range(2):
@@ -100,13 +100,43 @@ def main():
 
             imgui.end_table()
 
+        drag_changed, drag = imgui.drag_float(
+            "Drag to rotate!", 0, 0.01, -1, 1, "", imgui.SliderFlags_.no_input)
+        if drag_changed:
+            rotation = glm.rotate(-drag)
+            app_state.myNvgDemo.matrix = rotation * app_state.myNvgDemo.matrix
+
+        scale_changed, scale = imgui.drag_float(
+            "Drag to scale!", 1, 0.01, 0, 2, "", imgui.SliderFlags_.no_input)
+        if scale_changed:
+            app_state.myNvgDemo.matrix = glm.scale(
+                glm.vec2(scale)) * app_state.myNvgDemo.matrix
+
+        imgui.separator_text("Properties")
+
+        imgui.text(f"Determinant: {glm.determinant(
+            app_state.myNvgDemo.matrix)}")
+
+        imgui.separator_text("Commands")
+
+        if imgui.button("Invert"):
+            inverted = glm.inverse(app_state.myNvgDemo.matrix)
+            app_state.myNvgDemo.matrix = inverted
+
         if imgui.button("Generate Dots"):
             app_state.myNvgDemo.clear_dots()
             app_state.myNvgDemo.generate_dots(20)
 
-        if imgui.collapsing_header("Dots"):
-            for dot in app_state.myNvgDemo.dots:
-                imgui.text(f"{dot.x}, {dot.y}")
+        if imgui.button("Clear Dots"):
+            app_state.myNvgDemo.clear_dots()
+
+        imgui.spacing()
+        imgui.spacing()
+
+        if imgui.button("Reset"):
+            app_state.myNvgDemo.matrix = glm.mat3x3()
+
+        imgui.separator_text("Background")
 
         imgui.set_next_item_width(hello_imgui.em_size(15))
         _, app_state.clear_color = imgui.color_edit4(

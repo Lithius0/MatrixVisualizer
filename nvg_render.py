@@ -39,6 +39,7 @@ class NvgData:
         nvg.fill(self.context)
 
     def draw_grid(self, spacing: float, lines: int):
+        """ Draw a grid on the given context. """
         nvg.save(self.context)
         for i in range(-lines, lines):
             nvg.stroke_color(self.context, nvg.rgba(100, 100, 100, 100))
@@ -54,6 +55,7 @@ class NvgData:
         nvg.restore(self.context)
 
     def transform(self, matrix: mat3x3):
+        """ Transform context by the given matrix. """
         nvg.transform(self.context, matrix[0].x, matrix[0].y, matrix[1].x,
                       matrix[1].y, matrix[2].x, matrix[2].y)
 
@@ -119,7 +121,7 @@ class NvgData:
         self.draw_line(vec2(0, 0), self.y_unit)
         nvg.restore(self.context)
 
-        # Post misc vector
+        # Post transform misc vector
         nvg.stroke_color(self.context, nvg.rgba(255, 255, 0, 100))
         nvg.fill_color(self.context, nvg.rgb(0, 255, 0))
         self.draw_line(vec2(0, 0), self.misc_vector)

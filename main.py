@@ -62,6 +62,7 @@ def main():
                 app_state.vg, app_state.frame_buffer, nvg_drawing_function, clear_color_vec4)
             imgui.image(app_state.frame_buffer.texture_id, ImVec2(1000, 600))
 
+        # Matrices and vectors
         if imgui.begin_table("MatrixEdit", 4, imgui.TableFlags_.no_pad_inner_x | imgui.TableFlags_.borders_inner):
             imgui.table_setup_column(
                 f"Transform X", imgui.TableColumnFlags_.width_fixed, 100)
@@ -100,6 +101,7 @@ def main():
 
             imgui.end_table()
 
+        # Draggers for certain transformations
         drag_changed, drag = imgui.drag_float(
             "Drag to rotate!", 0, 0.01, -1, 1, "", imgui.SliderFlags_.no_input)
         if drag_changed:
